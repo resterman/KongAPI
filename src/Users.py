@@ -25,7 +25,12 @@ class KongAuthUser(KongUser):
         HTML_SCRAP_URL = 'http://www.kongregate.com/community'
         LOGIN_URL = 'https://www.kongregate.com/session'
         ACCOUNT_URL = 'http://www.kongregate.com/accounts/'
-        
+       
+	def __init__(self, username, password):
+		KongUser.__init__(self, username)
+		self.login(password)
+		
+
         # Logs the user, provided a password, and creates a new Kongregate session
         def login(self, password):
                 self._session = requests.Session()
@@ -44,7 +49,7 @@ class KongAuthUser(KongUser):
                 return resp.json()
                 
         # Shouts another user
-		def shout(self, to, msg):
+	def shout(self, to, msg):
                 url = KongAuthUser.ACCOUNT_URL + to + '/messages.json'
                 
                 data = 'utf8=%E2%9C%93&authenticity_token='\
