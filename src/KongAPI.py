@@ -44,7 +44,7 @@ class KongAuthUser(KongUser):
                 return resp.json()
                 
         # Shouts another user
-		def shout(self, to, msg):
+	def shout(self, to, msg):
                 url = KongAuthUser.ACCOUNT_URL + to + '/messages.json'
                 
                 data = 'utf8=%E2%9C%93&authenticity_token='\
