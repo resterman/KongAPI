@@ -38,6 +38,12 @@ class KongUser:
 		url = KongUser.ACCOUNT_URL + self.username() + '/messages.json'
 		req = self._session.get(url, params=params)
 		return req.json()
+	
+	# Get user's badges
+	def getBadges(self):
+		url = KongUser.ACCOUNT_URL + self.username() + '/badges.json'
+		req = self._session.get(url)
+		return req.json()
 		
 class KongAuthUser(KongUser):
 	HTML_SCRAP_URL = 'http://www.kongregate.com/community'
@@ -66,19 +72,23 @@ class KongAuthUser(KongUser):
 		m = re.search('<meta content="(.*)" name="csrf-token"', response)
 		return m.group(1)
 		
-	# Send a shout
-	def shout(self, to, msg):
-		url = KongUser.ACCOUNT_URL + to + '/messages.json'
-		data = 'utf8=%E2%9C%93&authenticity_token='\
-				+ self._authToken + '&shout%5Bcontent%5D='\
-				+ msg + '&_='
-				
+	# Set the header to send a post request
+	def __setHeader(self, data):
 		self._session.headers.update({
 			'X-Requested-With': 'XMLHttpRequest',
 			'X-Prototype-Version': '1.7_rc3',
 			'X-CSRF-Token': self._authToken,
 			'Content-Length': len(data)
 		})
+		
+	# Send a shout
+	def shout(self, to, msg):
+		url = KongUser.ACCOUNT_URL + to + '/messages.json'
+		data = 'utf8=%E2%9C%93&authenticity_token='\
+				+ self._authToken + '&shout%5Bcontent%5D='\
+				+ msg + '&_='
+		
+		self.__setHeader(data)
 		
 		resp = self._session.post(url, data=data)
 		return resp.text
@@ -89,13 +99,22 @@ class KongAuthUser(KongUser):
 		data = 'utf8=%E2%9C%93&authenticity_token='\
 				+ self._authToken + '&shout%5Bprivate%5D=true'\
 				+'&shout%5Bcontent%5D=' + msg
-				
-		self._session.headers.update({
-			'X-Requested-With': 'XMLHttpRequest',
-			'X-Prototype-Version': '1.7_rc3',
-			'X-CSRF-Token': self._authToken,
-			'Content-Length': len(data)
-		})
+		
+		self.__setHeader(data)
+		
+		resp = self._session.post(url, data=data)
+		return resp.text
+	
+	# Deletes a message by ID in the specified profile
+	def deleteMessage(self, msgId, username=None):
+		if username == None:
+			username = self.username()
+			
+		url = KongUser.ACCOUNT_URL + username + '/messages/' + str(msgId) + '.js'
+		data = 'utf8=%E2%9C%93&authenticity_token=' + self._authToken\
+				+ '&_method=delete&_='
+		
+		self.__setHeader(data)
 		
 		resp = self._session.post(url, data=data)
 		return resp.text
@@ -127,6 +146,27 @@ class KongAuthUser(KongUser):
 		req = self._session.get(url, params=params)
 		return req.json()
 	
+	# Add a friend
+	def friend(self, username):
+		url = KongUser.ACCOUNT_URL + self.username() + '/friends/' + username
+		data = 'authenticity_token=' + self._authToken + '&_method=put&_='
+		url += '?friend_from=new_profile&masthead=true'
+		
+		self.__setHeader(data)
+		
+		req = self._session.post(url, data=data)
+		return req.text
+		
+	def unfriend(self, username):
+		url = KongUser.ACCOUNT_URL + self.username() + '/friends/' + username
+		data = 'authenticity_token=' + self._authToken + '&_method=put&_='
+		url += '?masthead=true&unfriend_from=new_profile'
+		
+		self.__setHeader(data)
+		
+		req = self._session.post(url, data=data)
+		return req.text
+		
 	# Rate a game
 	def rate(self, gameId, rating):
 		data = 'user_id=' + str(self.userId()) + '&game_id=' + str(gameId)\
