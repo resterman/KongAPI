@@ -11,12 +11,15 @@ class KongUser:
 		self._username = username
 		self._session = requests.Session()
 	
+	# Return username
 	def username(self):
 		return self._username
 	
+	# Return user info
 	def userInfo(self):
 		return self._userInfo
 	
+	# Get user info (without auth)
 	def loadInfo(self):
 		url = KongUser.USER_INFO_URL + self.username()
 		req = self._session.get(url)
@@ -91,3 +94,32 @@ class KongAuthUser(KongUser):
 		
 		resp = self._session.post(url, data=data)
 		return resp.text
+		
+	# Get user whispers
+	def getWhispers(self, params=None):
+		if params == None:
+			params = {'format': 'json', 'authenticity_token': self._authToken}
+
+		url = KongUser.ACCOUNT_URL + self.username() + '/private_messages.json'
+		req = self._session.get(url, params=params)
+		return req.json()
+		
+	# Get whispers sent and recieved with another username
+	def getWhispersWith(self, username, params=None):
+		if params == None:
+			params = {'format': 'json', 'authenticity_token': self._authToken}
+			
+		url = KongUser.ACCOUNT_URL + username + '/private_messages.json'
+		req = self._session.get(url, params=params)
+		return req.json()
+	
+	# Get user messages sent
+	def getSentMessages(self, params=None):
+		if params == None:
+			params = {'format': 'json', 'authenticity_token': self._authToken}
+			
+		url = KongUser.ACCOUNT_URL + self.username() + '/sent_messages.json'
+		req = self._session.get(url, params=params)
+		return req.json()
+
+
