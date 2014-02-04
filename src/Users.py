@@ -10,6 +10,7 @@ class KongUser:
 	def __init__(self, username):
 		self._username = username
 		self._session = requests.Session()
+		self.loadInfo()
 	
 	# Return username
 	def username(self):
@@ -18,6 +19,9 @@ class KongUser:
 	# Return user info
 	def userInfo(self):
 		return self._userInfo
+		
+	def userId(self):			
+		return self.userInfo()['user_id']
 	
 	# Get user info (without auth)
 	def loadInfo(self):
@@ -38,6 +42,7 @@ class KongUser:
 class KongAuthUser(KongUser):
 	HTML_SCRAP_URL = 'http://www.kongregate.com/community'
 	LOGIN_URL = 'https://www.kongregate.com/session'
+	GAME_RATING_URL = 'http://www.kongregate.com/game_ratings.json'
 		
 	# Log the user, provided a password, and creates a new Kongregate session
 	def login(self, password):
@@ -95,7 +100,7 @@ class KongAuthUser(KongUser):
 		resp = self._session.post(url, data=data)
 		return resp.text
 		
-	# Get user whispers
+	# Get user's whispers
 	def getWhispers(self, params=None):
 		if params == None:
 			params = {'format': 'json', 'authenticity_token': self._authToken}
@@ -121,5 +126,16 @@ class KongAuthUser(KongUser):
 		url = KongUser.ACCOUNT_URL + self.username() + '/sent_messages.json'
 		req = self._session.get(url, params=params)
 		return req.json()
-
+	
+	# Rate a game
+	def rate(self, gameId, rating):
+		data = 'user_id=' + str(self.userId()) + '&game_id=' + str(gameId)\
+					+ '&rating=' + str(rating)
+		
+		self._session.headers.update({
+			'Content-Length': len(data)
+		})
+		
+		req = self._session.post(KongAuthUser.GAME_RATING_URL, data=data)
+		return req.json()
 
